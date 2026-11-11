@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Library</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: auto; }
+    .card { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; box-sizing: border-box; font-size: 16px; }
+    input { background: #334155; color: white; }
+    button { background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background: #2563eb; }
+    button:disabled { background: #475569; cursor: not-allowed; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tabs button { flex: 1; background: #334155; }
+    .tabs button.active { background: #3b82f6; }
+    .hidden { display: none; }
+    
+    /* Books Grid */
+    .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;}
+    .book-card { background: #1e293b; border: 1px solid #334155; padding: 20px 10px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .book-card:hover { border-color: #3b82f6; transform: translateY(-3px); }
+    .book-card h3 { margin: 0; font-size: 1.1rem; color: #93c5fd; }
+    
+    /* Reader Modal */
+    #reader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: none; flex-direction: column; z-index: 100; }
+    .reader-header { padding: 15px; background: #1e293b; display: flex; justify-content: space-between; align-items: center; }
+    .reader-header button { width: auto; margin: 0; padding: 5px 15px; }
+    .reader-content { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .reader-content img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 50%; font-size: 24px; border: none; cursor: pointer; color: white; }
+    .nav-btn:hover { background: rgba(255,255,255,0.4); }
+    .prev { left: 20px; } .next { right: 20px; }
+    .status { font-size: 14px; color: #94a3b8; margin-top: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 style="text-align: center;">📚 My Library</h1>
+  
+  <div class="tabs">
+    <button id="tabUpload" class="active" onclick="switchTab('upload')">⬆ Upload</button>
+    <button id="tabView" onclick="switchTab('view')">📖 View Books</button>
+  </div>
+
+  <!-- UPLOAD SECTION -->
+  <div id="sectionUpload" class="card">
+    <label>GitHub Token (PAT)</label>
+    <input type="password" id="token" placeholder="github_pat_..." oninput="saveToken()">
+    
+    <label>Subject Name (Book Name)</label>
+    <input type="text" id="subjectName" placeholder="e.g. Biology">
+    
+    <label>Select Images</label>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    
+    <button id="uploadBtn" onclick="uploadImages()">Upload to GitHub</button>
+    <div class="status" id="uploadStatus"></div>
+  </div>
+
+  <!-- VIEW SECTION -->
+  <div id="sectionView" class="card hidden">
+    <button onclick="loadBooks()">🔄 Refresh Books</button>
+    <div class="books-grid" id="booksGrid"></div>
+    <div class="status" id="viewStatus"></div>
+  </div>
+</div>
+
+<!-- READER MODAL -->
+<div id="reader">
+  <div class="reader-header">
+    <h3 id="readerTitle" style="margin:0;">Book Name</h3>
+    <button onclick="closeReader()">Close ✕</button>
+  </div>
+  <div class="reader-content">
+    <button class="nav-btn prev" onclick="changePage(-1)">‹</button>
+    <img id="readerImage" src="" alt="Page">
+    <button class="nav-btn next" onclick="changePage(1)">›</button>
+  </div>
+  <div style="padding: 10px; text-align: center; background: #1e293b;" id="pageCounter">1 / 1</div>
+</div>
+
+<script>
+  // ==========================================
+  // ⚠️ अपनी डिटेल्स यहाँ भरें
+  // ==========================================
+  const OWNER = 'Studycare1';       // आपका GitHub Username
+  const REPO = 'MyLibrary';         // आपकी नई रिपॉजिटरी का नाम
+  const BRANCH = 'main';
+  
+  const API_BASE = `https://api.github.com/repos/${OWNER}/${REPO}/contents`;
+  
+  let currentImages = [];
+  let currentPage = 0;
+
+  // Token Save/Load
+  const tokenInput = document.getElementById('token');
+  tokenInput.value = localStorage.getItem('gh_token') || '';
+  function saveToken() { localStorage.setItem('gh_token', tokenInput.value.trim()); }
+
+  // Tab Switching
+  function switchTab(tab) {
+    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+    document.getElementById('tabView').classList.toggle('active', tab === 'view');
+    document.getElementById('sectionUpload').classList.toggle('hidden', tab !== 'upload');
+    document.getElementById('sectionView').classList.toggle('hidden', tab !== 'view');
+    
+    if (tab === 'view') loadBooks();
+  }
+
+  // ==========================================
+  // UPLOAD LOGIC
+  // ==========================================
+  async function uploadImages() {
+    const token = tokenInput.value.trim();
+    const subject = document.getElementById('subjectName').value.trim().toLowerCase().replace(/\s+/g, '-');
+    const files = document.getElementById('fileInput').files;
+    const status = document.getElementById('uploadStatus');
+    const btn = document.getElementById('uploadBtn');
+
+    if (!token || !subject || files.length === 0) {
+      status.innerText = '❌ कृपया टोकन, सब्जेक्ट का नाम और इमेजेज चुनें।';
+      return;
+    }
+
+    btn.disabled = true;
+    let success = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split('.').pop();
+      const fileName = `page-${String(i + 1).padStart(3, '0')}.${ext}`;
+      const path = `images/${subject}/${fileName}`;
+      
+      status.innerText = `⏳ अपलोड हो रहा है: ${fileName} (${i + 1}/${files.length})`;
+
+      try {
+        const base64 = await toBase64(file);
+        
+        // Check if file exists (for SHA)
+        let sha = null;
+        const checkRes = await fetch(`${API_BASE}/${path}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          sha = checkData.sha;
+        }
+
+        // Upload file
+        const body = { message: `Upload ${fileName} for ${subject}`, content: base64, branch: BRANCH };
+        if (sha) body.sha = sha;
+
+        const res = await fetch(`${API_BASE}/${path}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+        success++;
+      } catch (err) {
+        console.error(err);
+        status.innerText = `❌ एरर आया: ${err.message}`;
+        btn.disabled = false;
+        return;
+      }
+    }
+
+    status.innerText = `✅ सफलतापूर्वक ${success} इमेजेज '${subject}' में सेव हो गईं!`;
+    btn.disabled = false;
+    document.getElementById('fileInput').value = '';
+  }
+
+  // ==========================================
+  // VIEW BOOKS LOGIC
+  // ==========================================
+  async function loadBooks() {
+    const token = tokenInput.value.trim();
+    const grid = document.getElementById('booksGrid');
+    const status = document.getElementById('viewStatus');
+    
+    grid.innerHTML = '';
+    status.innerText = '⏳ बुक्स लोड हो रही हैं...';
+
+    try {
+      // Fetch folders from 'images' directory
+      const res = await fetch(`${API_BASE}/images`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          status.innerText = 'अभी तक कोई किताब अपलोड नहीं हुई है।';
+          return;
+        }
+        throw new Error('API Error');
+      }
+
+      const data = await res.json();
+      const folders = data.filter(item => item.type === 'dir');
+      
+      status.innerText = '';
+
+      if (folders.length === 0) {
+        status.innerText = 'कोई फोल्डर नहीं मिला।';
+        return;
+      }
+
+      folders.forEach(folder => {
+        const div = document.createElement('div');
+        div.className = 'book-card';
+        div.innerHTML = `<h3>${folder.name}</h3><p style="font-size:12px;color:#94a3b8;margin-top:5px;">Click to read</p>`;
+        div.onclick = () => openBook(folder.name);
+        grid.appendChild(div);
+      });
+
+    } catch (err) {
+      status.innerText = '❌ बुक्स लोड करने में एरर आया।';
+    }
+  }
+
+  async function openBook(subjectName) {
+    const token = tokenInput.value.trim();
+    const status = document.getElementById('viewStatus');
+    status.innerText = `⏳ '${subjectName}' खुल रही है...`;
+
+    try {
+      const res = await fetch(`${API_BASE}/images/${subjectName}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      
+      if (!res.ok) throw new Error('Failed to load images');
+      
+      const data = await res.json();
+      // Filter only images and sort them
+      const imageFiles = data
+        .filter(item => item.type === 'file' && item.name.match(/\.(jpg|jpeg|png|webp)$/i))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (imageFiles.length === 0) {
+        status.innerText = 'इस किताब में कोई इमेज नहीं है।';
+        return;
+      }
+
+      // Save urls to read
+      currentImages = imageFiles.map(file => file.download_url);
+      currentPage = 0;
+      
+      document.getElementById('readerTitle').innerText = subjectName.toUpperCase();
+      document.getElementById('reader').style.display = 'flex';
+      updateReaderImage();
+      
+      status.innerText = '';
+    } catch (err) {
+      status.innerText = '❌ किताब खोलने में एरर।';
+    }
+  }
+
+  // ==========================================
+  // READER CONTROLS
+  // ==========================================
+  function updateReaderImage() {
+    document.getElementById('readerImage').src = currentImages[currentPage];
+    document.getElementById('pageCounter').innerText = `${currentPage + 1} / ${currentImages.length}`;
+  }
+
+  function changePage(dir) {
+    if (currentPage + dir >= 0 && currentPage + dir < currentImages.length) {
+      currentPage += dir;
+      updateReaderImage();
+    }
+  }
+
+  function closeReader() {
+    document.getElementById('reader').style.display = 'none';
+  }
+
+  // Helpers
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = error => reject(error);
+    });
+  }
+</script>
+
+</body>
+</html>
