@@ -902,3 +902,66 @@ html[data-theme="light"] .bar{background:rgba(238,242,247,.8)}
   .book{box-shadow:none;border:0;background:#fff}
   .book img{max-height:none;max-width:100%}
 }
+
+/* ═══════════════════════════════════════════
+   TYPE TABS (Guess / Model)
+   ═══════════════════════════════════════════ */
+.tabs{
+  display:inline-flex;
+  gap:6px;
+  margin-bottom:22px;
+  padding:6px;
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  flex-wrap:wrap;
+}
+.tab{
+  padding:10px 18px;
+  font-size:14px;
+  font-weight:800;
+  background:transparent;
+  border:0;
+  color:var(--muted);
+  cursor:pointer;
+  border-radius:14px;
+  transition:all var(--normal) var(--ease);
+  font-family:inherit;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.tab:hover:not(.active){
+  background:var(--glass-hover);
+  color:var(--ink);
+}
+.tab.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;
+  box-shadow:0 4px 20px var(--accent-glow);
+}
+.tab-icon{font-size:16px}
+.tab-count{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:20px;
+  background:rgba(255,255,255,.15);
+  font-weight:800;
+  min-width:22px;
+  text-align:center;
+}
+.tab.active .tab-count{
+  background:rgba(255,255,255,.25);
+}
+@media(max-width:520px){
+  .tabs{width:100%;justify-content:center}
+  .tab{padding:9px 12px;font-size:12px;gap:5px}
+  .tab-label{display:none}
+  .tab .tab-icon{font-size:18px}
+  .tab-count{font-size:10px}
+  .tab.active .tab-label{display:inline}
+}
