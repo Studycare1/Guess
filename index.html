@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="hi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<title>📚 Guess Paper Library</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="glass header">
+  <div class="header-inner">
+    <h1 id="homeTitle">📚 Guess Paper Library</h1>
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="विषय खोजें… ( / )" autocomplete="off">
+    </div>
+    <button id="refreshBtn" class="neu icon-btn" title="Refresh counts">🔄</button>
+    <button id="helpBtn" class="neu icon-btn" title="Help">❓</button>
+    <button id="themeToggle" class="neu icon-btn" title="Theme">🌙</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <span class="si">📚</span>
+      <div>
+        <div class="sv" id="statSubjects">0</div>
+        <div class="sl">Subjects</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="si">📄</span>
+      <div>
+        <div class="sv" id="statPages">0</div>
+        <div class="sl">Total Pages</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="si">✅</span>
+      <div>
+        <div class="sv" id="statLoaded">0/0</div>
+        <div class="sl">Loaded</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recently viewed -->
+  <div id="recentWrap" style="display:none">
+    <div class="section-head">
+      <p class="section-title">🕒 हाल में देखे</p>
+    </div>
+    <div class="recent-list" id="recentList"></div>
+  </div>
+
+  <!-- Subjects -->
+  <div class="section-head">
+    <p class="section-title">सभी विषय</p>
+    <div class="section-actions">
+      <select id="sortSelect">
+        <option value="default">क्रम: default</option>
+        <option value="name">नाम (A→Z)</option>
+        <option value="pages-high">Pages ↓</option>
+        <option value="pages-low">Pages ↑</option>
+      </select>
+      <button id="showEmptyBtn">सभी दिखाएँ</button>
+    </div>
+  </div>
+
+  <div id="subjects" class="grid">
+    <div class="skeleton" style="height:190px"></div>
+    <div class="skeleton" style="height:190px"></div>
+    <div class="skeleton" style="height:190px"></div>
+    <div class="skeleton" style="height:190px"></div>
+    <div class="skeleton" style="height:190px"></div>
+    <div class="skeleton" style="height:190px"></div>
+  </div>
+
+</main>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpOverlay">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" id="helpClose">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="kbd-row"><span>Search focus</span><kbd>/</kbd></div>
+    <div class="kbd-row"><span>Next / Prev page</span><kbd>←</kbd> <kbd>→</kbd></div>
+    <div class="kbd-row"><span>First / Last page</span><kbd>Home</kbd> <kbd>End</kbd></div>
+    <div class="kbd-row"><span>Zoom in / out</span><kbd>+</kbd> <kbd>−</kbd></div>
+    <div class="kbd-row"><span>Reset zoom</span><kbd>0</kbd></div>
+    <div class="kbd-row"><span>Rotate</span><kbd>R</kbd></div>
+    <div class="kbd-row"><span>Fullscreen</span><kbd>F</kbd></div>
+    <div class="kbd-row"><span>Bookmark</span><kbd>B</kbd></div>
+    <div class="kbd-row"><span>Slideshow</span><kbd>S</kbd></div>
+    <div class="kbd-row"><span>Download</span><kbd>D</kbd></div>
+    <div class="kbd-row"><span>Help</span><kbd>?</kbd></div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

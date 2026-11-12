@@ -1,0 +1,12 @@
+{
+  "subjects": [
+    {"id":"biology","name":"Biology","name_hi":"जीव विज्ञान","icon":"🧬","color":"#22c55e","group":"Class 11"},
+    {"id":"biology12","name":"Biology 12","name_hi":"जीव विज्ञान कक्षा 12","icon":"🧪","color":"#10b981","group":"Class 12"},
+    {"id":"chemistry","name":"Chemistry","name_hi":"रसायन विज्ञान","icon":"⚗️","color":"#3b82f6","group":"Science"},
+    {"id":"physics","name":"Physics","name_hi":"भौतिक विज्ञान","icon":"⚛️","color":"#a855f7","group":"Science"},
+    {"id":"maths","name":"Maths","name_hi":"गणित","icon":"📐","color":"#f59e0b","group":"Core"},
+    {"id":"hindi","name":"Hindi","name_hi":"हिंदी","icon":"📖","color":"#ef4444","group":"Language"},
+    {"id":"english","name":"English","name_hi":"अंग्रेज़ी","icon":"🔤","color":"#06b6d4","group":"Language"},
+    {"id":"urdu","name":"Urdu","name_hi":"उर्दू","icon":"🕌","color":"#14b8a6","group":"Language"}
+  ]
+}
